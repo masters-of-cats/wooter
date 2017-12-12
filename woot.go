@@ -26,7 +26,7 @@ func (c Cp) Unpack(logger lager.Logger, id, parentID string, tar io.Reader) erro
 		"dir": dest,
 	})
 
-	if err := os.MkdirAll(dest, 0700); err != nil {
+	if err := os.MkdirAll(dest, 0755); err != nil {
 		return err
 	}
 
@@ -57,7 +57,7 @@ func (c Cp) Unpack(logger lager.Logger, id, parentID string, tar io.Reader) erro
 func (c Cp) Bundle(logger lager.Logger, handle string, layerIds []string) (specs.Spec, error) {
 	volumeDir := filepath.Join(c.BaseDir, VolumesDir, layerIds[len(layerIds)-1])
 	destDir := filepath.Join(c.BaseDir, DiffsDir, handle)
-	if err := os.MkdirAll(destDir, 0700); err != nil {
+	if err := os.MkdirAll(destDir, 0755); err != nil {
 		return specs.Spec{}, err
 	}
 
