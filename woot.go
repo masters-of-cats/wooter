@@ -30,7 +30,8 @@ func (c Cp) Unpack(logger lager.Logger, id, parentID string, tar io.Reader) erro
 		return err
 	}
 
-	if parentID != "" {
+	parentDir := filepath.Join(c.BaseDir, VolumesDir, parentID)
+	if parentID != "" && !isEmptyDir(parentDir) {
 		command := fmt.Sprintf("cp -r %s/* %s", filepath.Join(c.BaseDir, VolumesDir, parentID), dest+"/")
 		logger.Info("running-command-unplack", lager.Data{
 			"command": command,
@@ -89,24 +90,31 @@ func (c Cp) Exists(logger lager.Logger, id string) bool {
 }
 
 func chownToMaximus(path string) error {
-	if err := recursiveChown(path, Maximus, Maximus); err != nil {
-		return err
-	}
-	for path != "/" {
-		if err := os.Chown(path, Maximus, Maximus); err != nil {
-			return err
-		}
-		path = filepath.Dir(path)
-	}
-
-	return nil
+	return recursiveChown(path, Maximus, Maximus)
 }
 
 func recursiveChown(path string, uid, gid int) error {
 	return filepath.Walk(path, func(name string, info os.FileInfo, err error) error {
-		if err == nil {
-			err = os.Chown(name, uid, gid)
+		if err != nil {
+			return err
 		}
-		return err
+
+		if info.Mode() == os.ModeSymlink {
+			// Do not chown symlinks, we'll be eventually chowning the files they link to instead
+			return nil
+		}
+
+		return os.Chown(name, uid, gid)
 	})
+}
+
+func isEmptyDir(name string) bool {
+	f, err := os.Open(name)
+	if err != nil {
+		return true
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1)
+	return err == io.EOF
 }
