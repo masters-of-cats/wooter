@@ -16,7 +16,8 @@ const DiffsDir string = "diffs"
 const Maximus int = 4294967294
 
 type Cp struct {
-	BaseDir string
+	BaseDir    string
+	Privileged bool
 }
 
 func (c Cp) Unpack(logger lager.Logger, id, parentID string, tar io.Reader) error {
@@ -75,9 +76,11 @@ func (c Cp) Bundle(logger lager.Logger, handle string, layerIds []string) (specs
 			return specs.Spec{}, fmt.Errorf("%s: %s", string(out), err)
 		}
 
-		err := chownToMaximus(destDir, logger)
-		if err != nil {
-			return specs.Spec{}, err
+		if !c.Privileged {
+			err := chownToMaximus(destDir, logger)
+			if err != nil {
+				return specs.Spec{}, err
+			}
 		}
 	}
 
