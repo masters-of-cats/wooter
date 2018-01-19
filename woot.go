@@ -96,6 +96,14 @@ func (c Cp) Exists(logger lager.Logger, id string) bool {
 	return err == nil
 }
 
+func (c Cp) Delete(logger lager.Logger, id string) error {
+	var err error
+	if err := os.RemoveAll(filepath.Join(c.BaseDir, VolumesDir, id)); os.IsNotExist(err) {
+		err = nil
+	}
+	return err
+}
+
 func chownToMaximus(path string, logger lager.Logger) error {
 	return recursiveChown(path, Maximus, Maximus, logger)
 }
