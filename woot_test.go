@@ -50,6 +50,27 @@ func TestExistingAWoot(t *testing.T) {
 	}
 }
 
+func TestDeletingAWoot(t *testing.T) {
+	mytar, err := os.Open("mytar.tar")
+	if err != nil {
+		t.Fatal("open mytar", err)
+	}
+
+	w := createWoot(t, false)
+
+	if err := w.Unpack(testLogger, "my-layer-id", "", mytar); err != nil {
+		t.Errorf("expected unpack to succeed but got error %s", err)
+	}
+
+	if err := w.Delete(testLogger, "my-layer-id"); err != nil {
+		t.Errorf("expected delete to succeed but got error %s", err)
+	}
+
+	if w.Exists(testLogger, "my-layer-id") {
+		t.Error("expected my-id not to exist after deleting")
+	}
+}
+
 func TestWootingWithAParentWoot(t *testing.T) {
 	mytar, err := os.Open("mytar.tar")
 	if err != nil {
