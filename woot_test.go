@@ -41,7 +41,7 @@ func TestExistingAWoot(t *testing.T) {
 		t.Error("expected my-id not to exist before unpacking")
 	}
 
-	if err := w.Unpack(testLogger, "my-layer-id", "", mytar); err != nil {
+	if err := w.Unpack(testLogger, "my-layer-id", nil, mytar); err != nil {
 		t.Errorf("expected unpack to succeed but got error %s", err)
 	}
 
@@ -58,7 +58,7 @@ func TestDeletingAWoot(t *testing.T) {
 
 	w := createWoot(t, false)
 
-	if err := w.Unpack(testLogger, "my-layer-id", "", mytar); err != nil {
+	if err := w.Unpack(testLogger, "my-layer-id", nil, mytar); err != nil {
 		t.Errorf("expected unpack to succeed but got error %s", err)
 	}
 
@@ -84,11 +84,11 @@ func TestWootingWithAParentWoot(t *testing.T) {
 
 	w := createWoot(t, false)
 
-	if err := w.Unpack(testLogger, "my-parent-layer-id", "", myparenttar); err != nil {
+	if err := w.Unpack(testLogger, "my-parent-layer-id", nil, myparenttar); err != nil {
 		t.Errorf("expected unpack to succeed but got error %s", err)
 	}
 
-	if err := w.Unpack(testLogger, "my-layer-id", "my-parent-layer-id", mytar); err != nil {
+	if err := w.Unpack(testLogger, "my-layer-id", []string{"my-parent-layer-id"}, mytar); err != nil {
 		t.Errorf("expected unpack to succeed but got error %s", err)
 	}
 
@@ -148,7 +148,7 @@ func createSingleLayerBundle(t *testing.T, driver groot.Driver) specs.Spec {
 		t.Fatal("open mytar", err)
 	}
 
-	if err := driver.Unpack(testLogger, "my-layer-id", "", mytar); err != nil {
+	if err := driver.Unpack(testLogger, "my-layer-id", nil, mytar); err != nil {
 		t.Errorf("expected unpack to succeed but got error %s", err)
 	}
 

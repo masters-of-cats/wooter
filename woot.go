@@ -20,9 +20,9 @@ type Cp struct {
 	Privileged bool
 }
 
-func (c Cp) Unpack(logger lager.Logger, id, parentID string, tar io.Reader) error {
+func (c Cp) Unpack(logger lager.Logger, layerID string, parentIDs []string, layerTar io.Reader) error {
 	logger = logger.Session("unpack")
-	dest := filepath.Join(c.BaseDir, VolumesDir, id)
+	dest := filepath.Join(c.BaseDir, VolumesDir, layerID)
 
 	logger.Info("creating-dir", lager.Data{
 		"dir": dest,
@@ -32,15 +32,18 @@ func (c Cp) Unpack(logger lager.Logger, id, parentID string, tar io.Reader) erro
 		return err
 	}
 
-	parentDir := filepath.Join(c.BaseDir, VolumesDir, parentID)
-	if parentID != "" && !isEmptyDir(parentDir) {
-		command := fmt.Sprintf("cp -R -a %s/. %s", filepath.Join(c.BaseDir, VolumesDir, parentID), dest+"/")
-		logger.Info("copy-parent-layer-command", lager.Data{
-			"command": command,
-		})
-		cpCmd := exec.Command("sh", "-c", command)
-		if out, err := cpCmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("%s: %s", string(out), err)
+	if len(parentIDs) > 0 {
+		parentID := parentIDs[len(parentIDs)-1]
+		parentDir := filepath.Join(c.BaseDir, VolumesDir, parentID)
+		if !isEmptyDir(parentDir) {
+			command := fmt.Sprintf("cp -R -a %s/. %s", filepath.Join(c.BaseDir, VolumesDir, parentID), dest+"/")
+			logger.Info("copy-parent-layer-command", lager.Data{
+				"command": command,
+			})
+			cpCmd := exec.Command("sh", "-c", command)
+			if out, err := cpCmd.CombinedOutput(); err != nil {
+				return fmt.Errorf("%s: %s", string(out), err)
+			}
 		}
 	}
 
@@ -49,7 +52,7 @@ func (c Cp) Unpack(logger lager.Logger, id, parentID string, tar io.Reader) erro
 	})
 
 	tarCmd := exec.Command("tar", "-p", "-x", "-C", dest)
-	tarCmd.Stdin = tar
+	tarCmd.Stdin = layerTar
 	if err := tarCmd.Run(); err != nil {
 		return err
 	}
